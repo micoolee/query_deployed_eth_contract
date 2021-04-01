@@ -18,7 +18,7 @@ module.exports = {
     },
     main: {
       provider: function () {
-        return new HDWalletProvider(process.env.INFURA_MAINNET_MNEMONIC, 'https://mainnet.infura.io/v3/' + process.env.INFURA_KEY)
+        return new HDWalletProvider(process.env.INFURA_MAINNET_MNEMONIC, 'https://eth-mainnet.alchemyapi.io/v2/' + process.env.INFURA_KEY)
       },
       network_id: '1',
       networkCheckTimeout: 50000000,
