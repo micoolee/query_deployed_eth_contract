@@ -14,32 +14,26 @@ module.exports = async function () {
   let contract_uni = new web3.eth.Contract(uniAbi, contract_address)
 
   //test1
-  var err,
-    res = await contract_uni.methods.factory().call()
-  if (err != null) {
-    console.log(err)
-  } else {
-    console.log('factory result: ', res.toString())
-  }
+  await contract_uni.methods
+    .factory()
+    .call()
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
 
   //approve
   await usdt.methods
     .approve(contract_address, 0)
     .send({ from: accounts[0] })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
-    })
+
   await usdt.methods
-    .approve(contract_address, 1000000000000000)
+    .approve(contract_address, '1000000000000000000000')
     .send({ from: accounts[0] })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 
   //allowance
@@ -47,11 +41,10 @@ module.exports = async function () {
   console.log('allowance:', allowance.toString())
 
   //swapTokensForExactTokens
-  var err,
-    res = await contract_uni.methods.swapExactETHForTokens(0, [weth_address, usdt_address], accounts[0], 10000000000000).send({ from: accounts[0], value: 10000000000000 })
-  if (err != null) {
-    console.log(err)
-  } else {
-    console.log('swapExactETHForTokens res:', res)
-  }
+  await contract_uni.methods
+    .swapExactETHForTokens(200000000, [weth_address, usdt_address], accounts[0], 10000000000000)
+    .send({ from: accounts[0], value: '1000000000000000000', gas: 2100000, gasPrice: '20000000000' })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
 }
