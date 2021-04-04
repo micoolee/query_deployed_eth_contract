@@ -65,4 +65,5 @@ module.exports = function () {
       console.log('OPERATOR_ROLE: ', res)
     }
   })
+  console.log('end')
 }
