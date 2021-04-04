@@ -2,6 +2,7 @@ var Web3 = require('web3')
 
 //1、change contract address on mainnet
 var usdt_address = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
+var gusd_address = '0x056Fd409E1d7A124BD7017459dFEa2F387b6d5Cd'
 var token_3crv = '0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490'
 var crv = '0xD533a949740bb3306d119CC777fa900bA034cd52'
 var lp_token = '0xd2967f45c4f384deea880f807be904762a3dea07'
@@ -26,6 +27,11 @@ module.exports = async function () {
   balance = await usdt.methods.balanceOf(accounts[0]).call()
   console.log(balance.toString())
 
+  //gusd实例
+  const gusd = new web3.eth.Contract(usdtAbi, gusd_address)
+  balance = await gusd.methods.balanceOf(accounts[0]).call()
+  console.log(balance.toString())
+
   //3crv实例
   const crv3 = new web3.eth.Contract(usdtAbi, token_3crv)
   balance = await crv3.methods.balanceOf(accounts[0]).call()
@@ -40,13 +46,12 @@ module.exports = async function () {
   //lp token
   const lpToken = new web3.eth.Contract(lptoken_metapool, lp_token)
   balance = await lpToken.methods.balanceOf(accounts[0]).call()
-  console.log(balance.toString())
+  console.log('lpToken balance: ', balance.toString())
 
   //gusd deposit实例
   const contract_depositgusd = new web3.eth.Contract(deposit_metapool, deposit_gusd)
-  contract_depositgusd.methods.pool().call((err, val) => {
-    console.log({ err, val })
-  })
+  pool = await contract_depositgusd.methods.pool().call()
+  console.log('pool: ', pool)
 
   //gusd gauge实例
   const contract_gaugegusd = new web3.eth.Contract(gauge_metapool, gauge_gusd)
@@ -59,20 +64,14 @@ module.exports = async function () {
   await crv3.methods
     .approve(swap_gusd, 0)
     .send({ from: accounts[0] })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
   await crv3.methods
     .approve(swap_gusd, '10000000000000000000000')
     .send({ from: accounts[0] })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 
   //mike 检查3crv的额度
@@ -82,40 +81,28 @@ module.exports = async function () {
   await contract_gusd.methods
     .add_liquidity([0, '2000000000000000000'], 0)
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 
   await contract_gusd.methods
-    .remove_liquidity('1000000000000000000', [0, 0])
+    .remove_liquidity('2000000000000000000', [0, 0])
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 
   await lpToken.methods
     .approve(gauge_gusd, 0)
     .send({ from: accounts[0] })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
   await lpToken.methods
     .approve(gauge_gusd, '10000000000000000000000')
     .send({ from: accounts[0] })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 
   allowance = await lpToken.methods.allowance(accounts[0], gauge_gusd).call()
@@ -124,21 +111,65 @@ module.exports = async function () {
   await contract_gaugegusd.methods
     .deposit(10, accounts[0])
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 
   await contract_gaugegusd.methods
-    .withdraw(10)
+    .withdraw(5)
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+
+  await contract_gaugegusd.methods
+    .claimable_tokens(accounts[0])
+    .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
+
+  balance = await contract_gaugegusd.methods.balanceOf(accounts[0]).call()
+  console.log('balance: ', balance)
+
+  claimableTokens = await contract_gaugegusd.methods.claimable_tokens(accounts[0]).call()
+  console.log('claimableTokens: ', claimableTokens)
+
+  await lpToken.methods
+    .approve(deposit_gusd, 0)
+    .send({ from: accounts[0] })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
+  await lpToken.methods
+    .approve(deposit_gusd, '10000000000000000000000')
+    .send({ from: accounts[0] })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
+  allowance = await lpToken.methods.allowance(accounts[0], deposit_gusd).call()
+  console.log('lptoken allowance of deposit_gusd:', allowance.toString())
+
+  await gusd.methods
+    .approve(deposit_gusd, 0)
+    .send({ from: accounts[0] })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
+  await gusd.methods
+    .approve(deposit_gusd, '10000000000000000000000')
+    .send({ from: accounts[0] })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
+    })
+  allowance = await gusd.methods.allowance(accounts[0], deposit_gusd).call()
+  console.log('gusd allowance of deposit_gusd:', allowance.toString())
+
+  await contract_depositgusd.methods
+    .add_liquidity([2000, 0, 0, 0], 0)
+    .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
+    .then(function (receipt) {
+      console.log('receipt: ', receipt)
     })
 }
 
