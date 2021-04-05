@@ -1,5 +1,6 @@
 var Web3 = require('web3')
 const web3 = new Web3('http://127.0.0.1:7545/')
+var assert = require('assert')
 
 //1、address on mainnet
 var usdt_address = '0xdAC17F958D2ee523a2206206994597C13D831ec7'
@@ -57,23 +58,15 @@ module.exports = async function () {
   minter = await contract_gaugegusd.methods.minter().call()
   console.log('minter: ', minter)
 
+  allow = '10000000000000000000000'
   //approve 3crv额度
-  await crv3.methods
-    .approve(swap_gusd, 0)
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
-  await crv3.methods
-    .approve(swap_gusd, '10000000000000000000000')
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
+  await approve(crv3, swap_gusd, accounts[0], 0)
+  await approve(crv3, swap_gusd, accounts[0], allow)
 
   //检查3crv的额度
   allowance = await crv3.methods.allowance(accounts[0], swap_gusd).call()
   console.log('allowance:', allowance.toString())
+  assert.strictEqual(allowance.toString(), allow, 'allowance not equal')
 
   //deposit 3crv
   await contract_gusd.methods
@@ -81,6 +74,7 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to add_liquidity')
     })
 
   await contract_gusd.methods
@@ -88,21 +82,12 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to remove_liquidity')
     })
 
   //approve gusd+3pool的lp token给gauge_gusd
-  await lpToken.methods
-    .approve(gauge_gusd, 0)
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
-  await lpToken.methods
-    .approve(gauge_gusd, '10000000000000000000000')
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
+  await approve(lpToken, gauge_gusd, accounts[0], 0)
+  await approve(lpToken, gauge_gusd, accounts[0], '10000000000000000000000')
 
   allowance = await lpToken.methods.allowance(accounts[0], gauge_gusd).call()
   console.log('lptoken allowance:', allowance.toString())
@@ -113,6 +98,7 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to deposit')
     })
 
   await contract_gaugegusd.methods
@@ -120,6 +106,7 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to withdraw')
     })
 
   await contract_gaugegusd.methods
@@ -127,6 +114,7 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to claimable_tokens')
     })
 
   balance = await contract_gaugegusd.methods.balanceOf(accounts[0]).call()
@@ -135,35 +123,15 @@ module.exports = async function () {
   claimableTokens = await contract_gaugegusd.methods.claimable_tokens(accounts[0]).call()
   console.log('claimableTokens: ', claimableTokens)
 
-  //approve gusd+3pool的lp token给deposit_gusd
-  await lpToken.methods
-    .approve(deposit_gusd, 0)
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
-  await lpToken.methods
-    .approve(deposit_gusd, '10000000000000000000000')
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
+  await approve(lpToken, deposit_gusd, accounts[0], 0)
+  await approve(lpToken, deposit_gusd, accounts[0], '10000000000000000000000')
+
   allowance = await lpToken.methods.allowance(accounts[0], deposit_gusd).call()
   console.log('lptoken allowance of deposit_gusd:', allowance.toString())
 
-  //approve gusd给deposit_gusd
-  await gusd.methods
-    .approve(deposit_gusd, 0)
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
-  await gusd.methods
-    .approve(deposit_gusd, '10000000000000000000000')
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
+  await approve(gusd, deposit_gusd, accounts[0], 0)
+  await approve(gusd, deposit_gusd, accounts[0], '10000000000000000000000')
+
   allowance = await gusd.methods.allowance(accounts[0], deposit_gusd).call()
   console.log('gusd allowance of deposit_gusd:', allowance.toString())
 
@@ -172,6 +140,7 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to add_liquidity')
     })
 
   await contract_depositgusd.methods
@@ -179,6 +148,7 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to remove_liquidity')
     })
 
   await contract_depositgusd.methods
@@ -186,18 +156,16 @@ module.exports = async function () {
     .send({ from: accounts[0], gas: 2100000, gasPrice: '20000000000' })
     .then(function (receipt) {
       console.log('receipt: ', receipt.status)
+      assert.strictEqual(receipt.status, true, 'fail to remove_liquidity_one_coin')
     })
   console.log('end')
 }
 
-function approve(token, account2, from, amount) {
-  token.methods
+async function approve(token, account2, from, amount) {
+  await token.methods
     .approve(account2, amount)
     .send({ from: from })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt.status)
     })
 }

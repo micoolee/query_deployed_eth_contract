@@ -33,18 +33,8 @@ module.exports = async function () {
   console.log('minter: ', minter)
 
   //approve usdt额度
-  await usdt.methods
-    .approve(swap_3pool, 0)
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
-  await usdt.methods
-    .approve(swap_3pool, '100000000000000000')
-    .send({ from: accounts[0] })
-    .then(function (receipt) {
-      console.log('receipt: ', receipt.status)
-    })
+  await approve(usdt, swap_3pool, accounts[0], 0)
+  await approve(usdt, swap_3pool, accounts[0], '10000000000000000000000')
 
   //检查usdt的额度
   allowance = await usdt.methods.allowance(accounts[0], swap_3pool).call()
@@ -83,14 +73,11 @@ module.exports = async function () {
   console.log('end')
 }
 
-function approve(token, account2, from, amount) {
-  token.methods
+async function approve(token, account2, from, amount) {
+  await token.methods
     .approve(account2, amount)
     .send({ from: from })
-    .once('transactionHash', (hash) => {
-      console.log(hash)
-    })
-    .once('receipt', (receipt) => {
-      console.log(receipt)
+    .then(function (receipt) {
+      console.log('receipt: ', receipt.status)
     })
 }
